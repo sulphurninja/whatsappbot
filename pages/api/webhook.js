@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-export default async (req = NextApiRequest, res = NextApiResponse) => {
+export default async (req, res) => {
   if (req.method === 'POST') {
     const { message } = req.body;
 
@@ -30,7 +30,7 @@ export default async (req = NextApiRequest, res = NextApiResponse) => {
 const sendWhatsAppMessage = async (phoneNumber, vehicleData) => {
   const payload = {
     countryCode: '+91', // Replace with actual country code
-    phoneNumber: "+919850750188",
+    phoneNumber: phoneNumber,
     type: 'Template',
     template: {
       name: 'vehicle_details_template', // Replace with your template name
