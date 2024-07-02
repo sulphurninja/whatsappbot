@@ -7,7 +7,7 @@ const sendWhatsAppMessage = async (phoneNumber, vehicleData) => {
         phoneNumber: "7276051102",
         type: 'Template',
         template: {
-            name: 'vehicle_details_template', // Replace with your template name
+            name: 'vehicle_details_template_fk', // Replace with your template name
             languageCode: 'en',
             bodyValues: [vehicleData], // Add more variables if required by your template
         },
