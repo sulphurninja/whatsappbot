@@ -36,7 +36,7 @@ const sendWhatsAppMessage = async (phoneNumber, vehicleData) => {
 
 export default async (req = NextApiRequest, res = NextApiResponse) => {
     if (req.method === 'POST') {
-        const { message } = req.body;
+        const message = req.body;
         console.log(message, 'this is the message!!!!!!!!')
 
         // Respond to test webhook
