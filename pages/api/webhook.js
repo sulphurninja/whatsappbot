@@ -1,17 +1,18 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 // Function to send WhatsApp message via Interakt API
-const sendWhatsAppMessage = async (phoneNumber, vehicleData) => {
+const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody) => {
     const payload = {
         countryCode: '+91', // Replace with actual country code
         phoneNumber: phoneNumber,
         type: 'Template',
         template: {
-            name: 'names', // Replace with your template name
+            name: templateName, // Use the provided template name
             languageCode: 'en',
-            bodyValues: "WOW", // Add more variables if required by your template
+            bodyValues: [messageBody], // Pass the message body as a variable
         },
     };
+
     try {
         const response = await fetch('https://api.interakt.ai/v1/public/message/', {
             method: 'POST',
@@ -34,28 +35,30 @@ const sendWhatsAppMessage = async (phoneNumber, vehicleData) => {
     }
 };
 
-export default async (req = NextApiRequest, res = NextApiResponse) => {
+export default async (req, res) => {
     if (req.method === 'POST') {
-        const message = req.body;
-        console.log(message, 'this is the message!!!!!!!!')
+        const { data } = req.body;
+
+        // Extract message content
+        const messageContent = data.message.message;
 
         // Respond to test webhook
-        if (!message) {
+        if (!messageContent) {
             return res.status(200).json({ status: 'success', message: 'Webhook test successful' });
         }
 
-        if (message && message.body && message.body.startsWith('names ')) {
-            const vehicleDetails = message.body.substring(3).trim();
+        // Extract relevant details
+        const phoneNumber = data.customer.phone_number;
+        const templateName = messageContent.startsWith('VD') ? 'vehicle_details_template_fk' : 'names';
 
-            try {
-                // Send the template message directly
-                await sendWhatsAppMessage(message.from, vehicleDetails);
+        try {
+            // Send the appropriate template message
+            await sendWhatsAppMessage(phoneNumber, templateName, messageContent);
 
-                return res.status(200).json({ status: 'success' });
-            } catch (error) {
-                console.error('Error sending vehicle details template:', error);
-                return res.status(500).json({ status: 'error', message: 'Failed to send vehicle details template' });
-            }
+            return res.status(200).json({ status: 'success' });
+        } catch (error) {
+            console.error('Error sending WhatsApp message:', error);
+            return res.status(500).json({ status: 'error', message: 'Failed to send WhatsApp message' });
         }
     }
 
