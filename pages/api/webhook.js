@@ -31,6 +31,9 @@ const fetchVehicleDetails = async (regNo) => {
 
 // Function to send WhatsApp message via Interakt API
 const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody) => {
+  // Sanitize message body for Interakt API
+  const sanitizedBody = messageBody.replace(/[\n\r\t]/g, ' ');
+
   const payload = {
     countryCode: '+91',
     phoneNumber: phoneNumber,
@@ -38,7 +41,7 @@ const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody) => {
     template: {
       name: templateName,
       languageCode: 'en',
-      bodyValues: [messageBody],
+      bodyValues: [sanitizedBody],
     },
   };
 
@@ -89,8 +92,8 @@ export default async (req, res) => {
         // Fetch vehicle details
         const vehicleDetails = await fetchVehicleDetails(regNo);
 
-        // Prepare message body with vehicle details
-        const messageBody = `Vehicle Number: ${vehicleDetails.reg_no}\n` +
+        // Prepare formatted response
+        const formattedResponse = `Vehicle Number: ${vehicleDetails.reg_no}\n` +
           `RC Owner: ${vehicleDetails.owner_name}\n` +
           `RC Father Name: ${vehicleDetails.owner_father_name}\n` +
           `Present Address: ${vehicleDetails.current_address_line1}, ${vehicleDetails.current_address_line2}, ${vehicleDetails.current_address_line3}\n` +
@@ -135,8 +138,8 @@ export default async (req, res) => {
         // Set template name for vehicle details
         templateName = 'vehicle_details_template_fk';
 
-        // Send WhatsApp message with vehicle details
-        await sendWhatsAppMessage(phoneNumber, templateName, messageBody);
+        // Send WhatsApp message with formatted response
+        await sendWhatsAppMessage(phoneNumber, templateName, formattedResponse);
 
         return res.status(200).json({ status: 'success' });
       } catch (error) {
