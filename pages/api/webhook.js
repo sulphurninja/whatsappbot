@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+import { NextApiRequest, NextApiResponse } from 'next';
 
 const sendWhatsAppMessage = async (phoneNumber, vehicleData) => {
     const payload = {
@@ -12,7 +12,7 @@ const sendWhatsAppMessage = async (phoneNumber, vehicleData) => {
         },
     };
 
-    const response = await fetch('https://api.interakt.ai/v1/public/message/', {
+    await fetch('https://api.interakt.ai/v1/public/message/', {
         method: 'POST',
         headers: {
             Authorization: `Basic ${process.env.INTERAKT_API_KEY}`,
@@ -20,16 +20,11 @@ const sendWhatsAppMessage = async (phoneNumber, vehicleData) => {
         },
         body: JSON.stringify(payload),
     });
-
-    const responseData = await response.json();
-    console.log('sendWhatsAppMessage response:', responseData);
 };
 
-export default async (req, res) => {
+export default async (req = NextApiRequest, res = NextApiResponse) => {
     if (req.method === 'POST') {
         const { message } = req.body;
-
-        console.log('Webhook received:', req.body);
 
         // Respond to test webhook
         if (!message) {
@@ -38,13 +33,11 @@ export default async (req, res) => {
 
         if (message && message.body && message.body.startsWith('VD ')) {
             const vehicleDetails = message.body.substring(3).trim();
-            console.log('Vehicle details:', vehicleDetails);
 
             try {
                 // Call your internal vehicle details API
                 const response = await fetch(`https://garudawhatsappbot.vercel.app/api/rto?details=${encodeURIComponent(vehicleDetails)}`);
                 const data = await response.json();
-                console.log('Vehicle details API response:', data);
 
                 // Send the response back to the user via Interakt API
                 await sendWhatsAppMessage(message.from, data);
@@ -55,8 +48,6 @@ export default async (req, res) => {
                 return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
             }
         }
-
-        return res.status(400).json({ status: 'error', message: 'Invalid command' });
     }
 
     return res.status(405).json({ status: 'error', message: 'Method not allowed' });
