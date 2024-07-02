@@ -9,7 +9,7 @@ const sendWhatsAppMessage = async (phoneNumber, vehicleData) => {
         template: {
             name: 'names', // Replace with your template name
             languageCode: 'en',
-            bodyValues: [vehicleData], // Add more variables if required by your template
+            bodyValues: "WOW", // Add more variables if required by your template
         },
     };
 
