@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 const sendWhatsAppMessage = async (phoneNumber, vehicleData) => {
     const payload = {
         countryCode: '+91', // Replace with actual country code
-        phoneNumber: phoneNumber,
+        phoneNumber: '+917276051102',
         type: 'Template',
         template: {
             name: 'vehicle_details_template', // Replace with your template name
