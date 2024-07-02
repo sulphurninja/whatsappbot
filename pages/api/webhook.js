@@ -12,7 +12,6 @@ const sendWhatsAppMessage = async (phoneNumber, vehicleData) => {
             bodyValues: "WOW", // Add more variables if required by your template
         },
     };
-
     try {
         const response = await fetch('https://api.interakt.ai/v1/public/message/', {
             method: 'POST',
@@ -38,6 +37,7 @@ const sendWhatsAppMessage = async (phoneNumber, vehicleData) => {
 export default async (req = NextApiRequest, res = NextApiResponse) => {
     if (req.method === 'POST') {
         const { message } = req.body;
+        console.log(message, 'this is the message!!!!!!!!')
 
         // Respond to test webhook
         if (!message) {
