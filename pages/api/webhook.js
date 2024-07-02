@@ -5,7 +5,7 @@ const fetchVehicleDetails = async (regNo) => {
   const options = {
     method: 'POST',
     headers: {
-      'x-rapidapi-key': '2a5693d34cmsh4d9d8123750aa5fp1c224fjsnc509101cb29e',
+      'x-rapidapi-key': '94a8f4bf31mshecce5b4466541b7p1a1c60jsncf852dadff8f',
       'x-rapidapi-host': 'rto-vehicle-information-verification-india.p.rapidapi.com',
       'Content-Type': 'application/json'
     },
