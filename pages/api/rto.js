@@ -88,7 +88,7 @@ export default async function handler(req, res) {
         `Owner Email: -\n` +
         `Purchasing Amount: -\n` +
         `Registration Type: -\n` +
-        `------------------------------\n` +
+        `------------------------------\n` +  
         `Dealer Information\n` +
         `Dealer Name: ${dealer_name}\n` +
         `Address: ${dealer_address_line1},\n` +

@@ -1,39 +1,30 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-const fetchCallerName = (phoneNumber) => {
-    return new Promise((resolve, reject) => {
-        const options = {
-            method: 'GET',
-            hostname: 'eyecon.p.rapidapi.com',
-            port: null,
-            path: `/api/v1/search?code=91&number=${phoneNumber}`,
-            headers: {
-                'x-rapidapi-key': '94a8f4bf31mshecce5b4466541b7p1a1c60jsncf852dadff8f',
-                'x-rapidapi-host': 'eyecon.p.rapidapi.com'
-            }
-        };
 
-        const req = https.request(options, function (res) {
-            const chunks = [];
 
-            res.on('data', function (chunk) {
-                chunks.push(chunk);
-            });
+// Function to fetch details from Eyecon API
+const fetchEyeconDetails = async (phoneNumber) => {
+    const options = {
+        method: 'GET',
+        headers: {
+            'x-rapidapi-key': '94a8f4bf31mshecce5b4466541b7p1a1c60jsncf852dadff8f',
+            'x-rapidapi-host': 'eyecon.p.rapidapi.com'
+        }
+    };
 
-            res.on('end', function () {
-                const body = Buffer.concat(chunks);
-                const data = JSON.parse(body.toString());
-                resolve(data);
-            });
-        });
-
-        req.on('error', function (error) {
-            reject(error);
-        });
-
-        req.end();
-    });
+    try {
+        const response = await fetch(`https://eyecon.p.rapidapi.com/api/v1/search?code=91&number=${phoneNumber}`, options);
+        if (!response.ok) {
+            throw new Error('Failed to fetch data from Eyecon API');
+        }
+        const data = await response.json();
+        return data.data; // Return only the data section of the response
+    } catch (error) {
+        console.error('Error fetching data from Eyecon API:', error);
+        throw new Error('Failed to fetch data from Eyecon API');
+    }
 };
+
 
 // Function to fetch vehicle details from RTO API
 const fetchVehicleDetails = async (regNo) => {
@@ -68,7 +59,6 @@ const fetchVehicleDetails = async (regNo) => {
 const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody) => {
     // Sanitize message body for Interakt API
     const sanitizedBody = messageBody.replace(/[\n\r\t]/g, ' ');
-
     const payload = {
         countryCode: '+91',
         phoneNumber: phoneNumber,
@@ -182,32 +172,40 @@ export default async (req, res) => {
                 return res.status(500).json({ status: 'error', message: 'Failed to fetch or send vehicle details' });
             }
         }
+
+
         // Check if message starts with 'name'
         if (messageContent.startsWith('name')) {
             try {
-                // Extract phone number from message (assuming format is 'name {number}')
-                const phoneNumber = messageContent.substring(5).trim(); // Extracts the number after 'name'
+                // Extract phone number from message
+                const phoneNumber = messageContent.substring(5).trim(); // Assuming format is 'name <number>'
 
-                // Fetch caller name from Eyecon API
-                const callerInfo = await fetchCallerName(phoneNumber);
+                // Fetch details from Eyecon API
+                const eyeconDetails = await fetchEyeconDetails(phoneNumber);
 
-                // Prepare message body for 'names' template
-                const messageBody = `${callerInfo.name} is calling you.`; // Adjust according to Eyecon API response structure
+                // Prepare formatted response
+                let formattedResponse = 'Names:\n';
+                formattedResponse += eyeconDetails.fullName + '\n'; // Add main full name
 
-                // Set template name for caller name
-                templateName = 'names';
+                // Add other names to the list
+                eyeconDetails.otherNames.forEach((item, index) => {
+                    formattedResponse += `${index + 1}. ${item.name}\n`;
+                });
 
-                // Send WhatsApp message with caller name
-                await sendWhatsAppMessage(phoneNumber, templateName, messageBody);
+                // Set template name for the WhatsApp message
+                const templateName = 'names';
+
+                // Send WhatsApp message with formatted response
+                await sendWhatsAppMessage(phoneNumber, templateName, formattedResponse);
 
                 return res.status(200).json({ status: 'success' });
             } catch (error) {
-                console.error('Error fetching or sending caller name:', error);
-                return res.status(500).json({ status: 'error', message: 'Failed to fetch or send caller name' });
+                console.error('Error fetching or sending details:', error);
+                return res.status(500).json({ status: 'error', message: 'Failed to fetch or send details' });
             }
         }
 
-        // For non 'VD' or 'name' messages, do not send any template
+        // For non 'VD' messages, do not send any template
         return res.status(200).json({ status: 'success', message: 'No template sent' });
     }
 
