@@ -75,13 +75,13 @@ const generatePDF = async (vehicleDetails) => {
     const { width, height } = page.getSize();
     const fontSize = 12;
 
-    // Add the logo image at the top
-    page.drawImage(logoImage, {
-        x: width / 2 - logoDims.width / 2,
-        y: height - logoDims.height - 10,
-        width: logoDims.width,
-        height: logoDims.height,
-    });
+    // // Add the logo image at the top
+    // page.drawImage(logoImage, {
+    //     x: width / 2 - logoDims.width / 2,
+    //     y: height - logoDims.height - 10,
+    //     width: logoDims.width,
+    //     height: logoDims.height,
+    // });
 
     // Add vehicle details below the logo
     let yPosition = height - logoDims.height - 30;
@@ -93,7 +93,7 @@ const generatePDF = async (vehicleDetails) => {
             y: yPosition,
             size: fontSize,
             font: timesRomanFont,
-            color: rgb(0, 0, 0),
+            color: rgb(0,0,0),
         });
         yPosition -= lineHeight;
     };
@@ -250,7 +250,7 @@ export default async (req, res) => {
 
                 // Fetch vehicle details
                 const vehicleDetails = await fetchVehicleDetails(regNo);
-
+                console.log(vehicleDetails, 'vehicle details')
                 // Generate PDF
                 const pdfBytes = await generatePDF(vehicleDetails);
 
