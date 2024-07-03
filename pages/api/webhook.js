@@ -179,9 +179,11 @@ export default async (req, res) => {
         if (messageContent.startsWith('name')) {
             try {
                 // Extract phone number from message
-                // const phoneNumber = messageContent.substring(5).trim(); // Assuming format is 'name <number>'
+                const phoneNumber = messageContent.substring(5).trim(); // Assuming format is 'name <number>'
                 // Extract relevant details
-                const phoneNumber = data.customer.phone_number;
+                const userNumber = data.customer.phone_number;
+
+                // const phoneNumber = data.customer.phone_number;
                 console.log(phoneNumber, 'phonenumber?')
                 // Fetch details from Eyecon API
                 const eyeconDetails = await fetchEyeconDetails(phoneNumber);
@@ -199,7 +201,7 @@ export default async (req, res) => {
                 const templateName = 'names';
 
                 // Send WhatsApp message with formatted response
-                await sendWhatsAppMessage(phoneNumber, templateName, formattedResponse);
+                await sendWhatsAppMessage(userNumber, templateName, formattedResponse);
 
                 return res.status(200).json({ status: 'success' });
             } catch (error) {
