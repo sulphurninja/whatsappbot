@@ -1,7 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-
-
 // Function to fetch details from Eyecon API
 const fetchEyeconDetails = async (phoneNumber) => {
     const options = {
@@ -92,6 +90,7 @@ const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody) => {
     }
 };
 
+
 export default async (req, res) => {
     if (req.method === 'POST') {
         const { data } = req.body;
@@ -106,6 +105,8 @@ export default async (req, res) => {
 
         // Extract relevant details
         const phoneNumber = data.customer.phone_number;
+        console.log(phoneNumber, 'phonenumber?')
+
         let templateName = ''; // Initialize template name
 
         // Check if message starts with 'VD'
@@ -178,8 +179,10 @@ export default async (req, res) => {
         if (messageContent.startsWith('name')) {
             try {
                 // Extract phone number from message
-                const phoneNumber = messageContent.substring(5).trim(); // Assuming format is 'name <number>'
-
+                // const phoneNumber = messageContent.substring(5).trim(); // Assuming format is 'name <number>'
+                // Extract relevant details
+                const phoneNumber = data.customer.phone_number;
+                console.log(phoneNumber, 'phonenumber?')
                 // Fetch details from Eyecon API
                 const eyeconDetails = await fetchEyeconDetails(phoneNumber);
 
