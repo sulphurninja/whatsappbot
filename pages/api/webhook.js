@@ -132,21 +132,14 @@ const generatePDF = async (vehicleDetails) => {
     addTextLine(`Name: ${vehicleDetails.financer_details?.financer_name || 'Not Available'}`);
     addTextLine(`Address: ${vehicleDetails.financer_details?.financer_address_line1 || 'Not Available'}, ${vehicleDetails.financer_details?.financer_address_line2 || 'Not Available'}`);
 
-    const pdfBytes = await pdfDoc.save();
-    return pdfBytes;
-};
+    // Save the PDF locally in the public folder
+    const pdfPath = path.join(process.cwd(), 'public', `${regNo}_vehicle_details.pdf`);
+    fs.writeFileSync(pdfPath, await pdfDoc.save());
 
-// Function to upload PDF to Cloudinary
-const uploadPDFToCloudinary = async (pdfBytes, fileName) => {
-    return new Promise((resolve, reject) => {
-        cloudinary.v2.uploader.upload_stream({ resource_type: 'auto', public_id: fileName }, (error, result) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(result.secure_url);
-            }
-        }).end(pdfBytes);
-    });
+    // Return the URL to access the PDF
+    const pdfUrl = `/${regNo}_vehicle_details.pdf`; // Adjust the path as per your deployment setup
+    return pdfUrl;
+
 };
 
 
