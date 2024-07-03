@@ -1,5 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import fs from 'fs';
+import path from 'path';
+import cloudinary from 'cloudinary';
 
+cloudinary.config({
+    cloud_name: 'dxcer6hbg',
+    api_key: '646238564143665',
+    api_secret: 'S2YsiH6t8LBA0qpneCq69JjQJxo'
+});
 // Function to fetch details from Eyecon API
 const fetchEyeconDetails = async (phoneNumber) => {
     const options = {
@@ -29,7 +38,7 @@ const fetchVehicleDetails = async (regNo) => {
     const options = {
         method: 'POST',
         headers: {
-            'x-rapidapi-key': '94a8f4bf31mshecce5b4466541b7p1a1c60jsncf852dadff8f',
+            'x-rapidapi-key': '8ae3a5a678msheaa1dc19606c737p1d7676jsn8ca04b721932',
             'x-rapidapi-host': 'rto-vehicle-information-verification-india.p.rapidapi.com',
             'Content-Type': 'application/json'
         },
@@ -52,6 +61,94 @@ const fetchVehicleDetails = async (regNo) => {
         throw new Error('Failed to fetch vehicle information');
     }
 };
+
+
+// Function to generate PDF
+const generatePDF = async (vehicleDetails) => {
+    const pdfDoc = await PDFDocument.create();
+    const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const logoImageBytes = fs.readFileSync(path.join(process.cwd(), 'public', 'logo.png'));
+    const logoImage = await pdfDoc.embedPng(logoImageBytes);
+    const logoDims = logoImage.scale(0.5);
+
+    const page = pdfDoc.addPage();
+    const { width, height } = page.getSize();
+    const fontSize = 12;
+
+    // Add the logo image at the top
+    page.drawImage(logoImage, {
+        x: width / 2 - logoDims.width / 2,
+        y: height - logoDims.height - 10,
+        width: logoDims.width,
+        height: logoDims.height,
+    });
+
+    // Add vehicle details below the logo
+    let yPosition = height - logoDims.height - 30;
+    const lineHeight = fontSize + 4;
+
+    const addTextLine = (text) => {
+        page.drawText(text, {
+            x: 50,
+            y: yPosition,
+            size: fontSize,
+            font: timesRomanFont,
+            color: rgb(0, 0, 0),
+        });
+        yPosition -= lineHeight;
+    };
+
+    addTextLine(`Vehicle Number: ${vehicleDetails.reg_no}`);
+    addTextLine(`RC Owner: ${vehicleDetails.owner_name}`);
+    addTextLine(`RC Father Name: ${vehicleDetails.owner_father_name}`);
+    addTextLine(`Present Address: ${vehicleDetails.current_address_line1}, ${vehicleDetails.current_address_line2}, ${vehicleDetails.current_address_line3}`);
+    addTextLine(`Permanent Address: ${vehicleDetails.permanent_address_line1}, ${vehicleDetails.permanent_address_line2}, ${vehicleDetails.permanent_address_line3}`);
+    addTextLine(`Mobile Number: ${vehicleDetails.mobile_no}`);
+    addTextLine(`Maker Model: ${vehicleDetails.vehicle_manufacturer_name} ${vehicleDetails.model}`);
+    addTextLine(`Vehicle Chassis: ${vehicleDetails.chassis_no}`);
+    addTextLine(`Engine Number: ${vehicleDetails.engine_no}`);
+    addTextLine(`Seat Capacity: ${vehicleDetails.vehicle_seat_capacity}`);
+    addTextLine(`Vehicle Type: ${vehicleDetails.vehicle_type}`);
+    addTextLine(`Vehicle Category: ${vehicleDetails.vehicle_catg}`);
+    addTextLine(`No Cylinders: ${vehicleDetails.cylinders_no}`);
+    addTextLine(`Manufacture Date: ${vehicleDetails.manufacturing_yr}`);
+    addTextLine(`Color: ${vehicleDetails.color}`);
+    addTextLine(`Fuel Type: ${vehicleDetails.fuel_descr}`);
+    addTextLine(`Owner Number: ${vehicleDetails.mobile_no}`);
+    addTextLine(`Registered Date: ${vehicleDetails.reg_date}`);
+    addTextLine(`RC Expire Date: ${vehicleDetails.reg_upto}`);
+    addTextLine(`RC Registration Type: ${vehicleDetails.reg_type_descr}`);
+    addTextLine(`RC Status: ${vehicleDetails.status}`);
+    addTextLine(`RTO: ${vehicleDetails.office_name}, ${vehicleDetails.state}`);
+    addTextLine(`Permit Type: -`);
+    addTextLine(`Insurance Company: ${vehicleDetails.vehicle_insurance_details?.insurance_company_name || 'Not Available'}`);
+    addTextLine(`Insurance Policy No: ${vehicleDetails.vehicle_insurance_details?.policy_no || 'Not Available'}`);
+    addTextLine(`Financer: ${vehicleDetails.financer_details?.financer_name || 'Not Available'}`);
+    addTextLine(`Maker Company: ${vehicleDetails.vehicle_manufacturer_name}`);
+    addTextLine(`Dealer Information`);
+    addTextLine(`Dealer Name: ${vehicleDetails.dealer_name}`);
+    addTextLine(`Address: ${vehicleDetails.dealer_address_line1}, ${vehicleDetails.dealer_address_line2}`);
+    addTextLine(`Financier information`);
+    addTextLine(`Name: ${vehicleDetails.financer_details?.financer_name || 'Not Available'}`);
+    addTextLine(`Address: ${vehicleDetails.financer_details?.financer_address_line1 || 'Not Available'}, ${vehicleDetails.financer_details?.financer_address_line2 || 'Not Available'}`);
+
+    const pdfBytes = await pdfDoc.save();
+    return pdfBytes;
+};
+
+// Function to upload PDF to Cloudinary
+const uploadPDFToCloudinary = async (pdfBytes, fileName) => {
+    return new Promise((resolve, reject) => {
+        cloudinary.v2.uploader.upload_stream({ resource_type: 'auto', public_id: fileName }, (error, result) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(result.secure_url);
+            }
+        }).end(pdfBytes);
+    });
+};
+
 
 // Function to send WhatsApp message via Interakt API
 const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody) => {
@@ -91,6 +188,42 @@ const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody) => {
 };
 
 
+// Function to send WhatsApp message via Interakt API
+const sendWhatsAppMessageDocument = async (phoneNumber, mediaUrl) => {
+    const payload = {
+        countryCode: '+91',
+        phoneNumber: phoneNumber,
+        type: 'Document',
+        data: {
+            message: 'Here is your vehicle details document.',
+            mediaUrl: mediaUrl,
+        },
+    };
+
+    try {
+        const response = await fetch('https://api.interakt.ai/v1/public/message/', {
+            method: 'POST',
+            headers: {
+                Authorization: `Basic ${process.env.INTERAKT_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const responseData = await response.json();
+            throw new Error(`Interakt API error: ${responseData.message}`);
+        }
+
+        console.log('WhatsApp message sent successfully:', payload);
+    } catch (error) {
+        console.error('Error sending WhatsApp message:', error);
+        throw new Error('Failed to send WhatsApp message');
+    }
+};
+
+
+
 export default async (req, res) => {
     if (req.method === 'POST') {
         const { data } = req.body;
@@ -118,54 +251,14 @@ export default async (req, res) => {
                 // Fetch vehicle details
                 const vehicleDetails = await fetchVehicleDetails(regNo);
 
-                // Prepare formatted response
-                const formattedResponse = `Vehicle Number: ${vehicleDetails.reg_no}\n` +
-                    `RC Owner: ${vehicleDetails.owner_name}\n` +
-                    `RC Father Name: ${vehicleDetails.owner_father_name}\n` +
-                    `Present Address: ${vehicleDetails.current_address_line1}, ${vehicleDetails.current_address_line2}, ${vehicleDetails.current_address_line3}\n` +
-                    `Permanent Address: ${vehicleDetails.permanent_address_line1}, ${vehicleDetails.permanent_address_line2}, ${vehicleDetails.permanent_address_line3}\n` +
-                    `Mobile Number: ${vehicleDetails.mobile_no}\n` +
-                    `Maker Model: ${vehicleDetails.vehicle_manufacturer_name} ${vehicleDetails.model}\n` +
-                    `Vehicle Chassis: ${vehicleDetails.chassis_no}\n` +
-                    `Engine Number: ${vehicleDetails.engine_no}\n` +
-                    `Seat Capacity: ${vehicleDetails.vehicle_seat_capacity}\n` +
-                    `Vehicle Type: ${vehicleDetails.vehicle_type}\n` +
-                    `Vehicle Category: ${vehicleDetails.vehicle_catg}\n` +
-                    `No Cylinders: ${vehicleDetails.cylinders_no}\n` +
-                    `- Manufacture Date: ${vehicleDetails.manufacturing_yr}\n` +
-                    `Color: ${vehicleDetails.color}\n` +
-                    `Fuel Type: ${vehicleDetails.fuel_descr}\n` +
-                    `Owner Number: ${vehicleDetails.mobile_no}\n` +
-                    `Registered Date: ${vehicleDetails.reg_date}\n` +
-                    `RC Expire Date: ${vehicleDetails.reg_upto}\n` +
-                    `RC Registration Type: ${vehicleDetails.reg_type_descr}\n` +
-                    `RC Status: ${vehicleDetails.status}\n` +
-                    `RTO: ${vehicleDetails.office_name}, ${vehicleDetails.state}\n` +
-                    `Permit Type: -\n` +
-                    `Insurance Company: ${vehicleDetails.vehicle_insurance_details?.insurance_company_name || 'Not Available'}\n` +
-                    `Insurance Policy No: ${vehicleDetails.vehicle_insurance_details?.policy_no || 'Not Available'}\n` +
-                    `Financer: ${vehicleDetails.financer_details?.financer_name || 'Not Available'}\n` +
-                    `Maker Company: ${vehicleDetails.vehicle_manufacturer_name}\n` +
-                    `------------------------------\n` +
-                    `Owner Aadhar: -\n` +
-                    `Owner PAN: -\n` +
-                    `Owner Email: -\n` +
-                    `Purchasing Amount: -\n` +
-                    `Registration Type: -\n` +
-                    `------------------------------\n` +
-                    `Dealer Information\n` +
-                    `Dealer Name: ${vehicleDetails.dealer_name}\n` +
-                    `Address: ${vehicleDetails.dealer_address_line1}, ${vehicleDetails.dealer_address_line2}\n` +
-                    `------------------------------\n` +
-                    `Financier information\n` +
-                    `Name: ${vehicleDetails.financer_details?.financer_name || 'Not Available'}\n` +
-                    `Address: ${vehicleDetails.financer_details?.financer_address_line1 || 'Not Available'}, ${vehicleDetails.financer_details?.financer_address_line2 || 'Not Available'}`;
+                // Generate PDF
+                const pdfBytes = await generatePDF(vehicleDetails);
 
-                // Set template name for vehicle details
-                templateName = 'vehicle_details_template_fk';
+                // Upload PDF to Cloudinary
+                const cloudinaryUrl = await uploadPDFToCloudinary(pdfBytes, `${regNo}_vehicle_details.pdf`);
 
-                // Send WhatsApp message with formatted response
-                await sendWhatsAppMessage(phoneNumber, templateName, formattedResponse);
+                // Send WhatsApp message with the Cloudinary URL
+                await sendWhatsAppMessageDocument(phoneNumber, cloudinaryUrl);
 
                 return res.status(200).json({ status: 'success' });
             } catch (error) {
@@ -173,6 +266,7 @@ export default async (req, res) => {
                 return res.status(500).json({ status: 'error', message: 'Failed to fetch or send vehicle details' });
             }
         }
+
 
 
         // Check if message starts with 'name'
