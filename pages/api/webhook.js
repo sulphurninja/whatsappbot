@@ -1,14 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import fs from 'fs';
 import path from 'path';
 import cloudinary from 'cloudinary';
+import pdf from 'html-pdf';
 
+// Cloudinary configuration
 cloudinary.config({
     cloud_name: 'dxcer6hbg',
     api_key: '646238564143665',
     api_secret: 'S2YsiH6t8LBA0qpneCq69JjQJxo'
 });
+
 // Function to fetch details from Eyecon API
 const fetchEyeconDetails = async (phoneNumber) => {
     const options = {
@@ -31,7 +33,6 @@ const fetchEyeconDetails = async (phoneNumber) => {
         throw new Error('Failed to fetch data from Eyecon API');
     }
 };
-
 
 // Function to fetch vehicle details from RTO API
 const fetchVehicleDetails = async (regNo) => {
@@ -62,82 +63,72 @@ const fetchVehicleDetails = async (regNo) => {
     }
 };
 
-
-// Function to generate PDF
+// Function to generate PDF from HTML
 const generatePDF = async (vehicleDetails) => {
-    const pdfDoc = await PDFDocument.create();
-    const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-    const logoImageBytes = fs.readFileSync(path.join(process.cwd(), 'public', 'logo.png'));
-    const logoImage = await pdfDoc.embedPng(logoImageBytes);
-    const logoDims = logoImage.scale(0.5);
+    const html = `
+        <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    .container { margin: 20px; }
+                    .header { text-align: center; }
+                    .content { margin-top: 20px; }
+                    .content h3 { margin: 0; }
+                    .content p { margin: 5px 0; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <img src="path/to/your/logo.png" alt="Logo" style="width: 100px;">
+                        <h2>Vehicle Details</h2>
+                    </div>
+                    <div class="content">
+                        <h3>Vehicle Number:</h3><p>${vehicleDetails.reg_no}</p>
+                        <h3>RC Owner:</h3><p>${vehicleDetails.owner_name}</p>
+                        <h3>RC Father Name:</h3><p>${vehicleDetails.owner_father_name}</p>
+                        <h3>Present Address:</h3><p>${vehicleDetails.current_address_line1}, ${vehicleDetails.current_address_line2}, ${vehicleDetails.current_address_line3}</p>
+                        <h3>Permanent Address:</h3><p>${vehicleDetails.permanent_address_line1}, ${vehicleDetails.permanent_address_line2}, ${vehicleDetails.permanent_address_line3}</p>
+                        <h3>Mobile Number:</h3><p>${vehicleDetails.mobile_no}</p>
+                        <h3>Maker Model:</h3><p>${vehicleDetails.vehicle_manufacturer_name} ${vehicleDetails.model}</p>
+                        <h3>Vehicle Chassis:</h3><p>${vehicleDetails.chassis_no}</p>
+                        <h3>Engine Number:</h3><p>${vehicleDetails.engine_no}</p>
+                        <h3>Seat Capacity:</h3><p>${vehicleDetails.vehicle_seat_capacity}</p>
+                        <h3>Vehicle Type:</h3><p>${vehicleDetails.vehicle_type}</p>
+                        <h3>Vehicle Category:</h3><p>${vehicleDetails.vehicle_catg}</p>
+                        <h3>No Cylinders:</h3><p>${vehicleDetails.cylinders_no}</p>
+                        <h3>Manufacture Date:</h3><p>${vehicleDetails.manufacturing_yr}</p>
+                        <h3>Color:</h3><p>${vehicleDetails.color}</p>
+                        <h3>Fuel Type:</h3><p>${vehicleDetails.fuel_descr}</p>
+                        <h3>Owner Number:</h3><p>${vehicleDetails.mobile_no}</p>
+                        <h3>Registered Date:</h3><p>${vehicleDetails.reg_date}</p>
+                        <h3>RC Expire Date:</h3><p>${vehicleDetails.reg_upto}</p>
+                        <h3>RC Registration Type:</h3><p>${vehicleDetails.reg_type_descr}</p>
+                        <h3>RC Status:</h3><p>${vehicleDetails.status}</p>
+                        <h3>RTO:</h3><p>${vehicleDetails.office_name}, ${vehicleDetails.state}</p>
+                        <h3>Permit Type:</h3><p>-</p>
+                        <h3>Insurance Company:</h3><p>${vehicleDetails.vehicle_insurance_details?.insurance_company_name || 'Not Available'}</p>
+                        <h3>Insurance Policy No:</h3><p>${vehicleDetails.vehicle_insurance_details?.policy_no || 'Not Available'}</p>
+                        <h3>Financer:</h3><p>${vehicleDetails.financer_details?.financer_name || 'Not Available'}</p>
+                        <h3>Maker Company:</h3><p>${vehicleDetails.vehicle_manufacturer_name}</p>
+                        <h3>Dealer Information</h3><p>Dealer Name: ${vehicleDetails.dealer_name}</p><p>Address: ${vehicleDetails.dealer_address_line1}, ${vehicleDetails.dealer_address_line2}</p>
+                        <h3>Financier information</h3><p>Name: ${vehicleDetails.financer_details?.financer_name || 'Not Available'}</p><p>Address: ${vehicleDetails.financer_details?.financer_address_line1 || 'Not Available'}, ${vehicleDetails.financer_details?.financer_address_line2 || 'Not Available'}</p>
+                    </div>
+                </div>
+            </body>
+        </html>
+    `;
 
-    const page = pdfDoc.addPage();
-    const { width, height } = page.getSize();
-    const fontSize = 12;
-
-    // // Add the logo image at the top
-    // page.drawImage(logoImage, {
-    //     x: width / 2 - logoDims.width / 2,
-    //     y: height - logoDims.height - 10,
-    //     width: logoDims.width,
-    //     height: logoDims.height,
-    // });
-
-    // Add vehicle details below the logo
-    let yPosition = height - logoDims.height - 30;
-    const lineHeight = fontSize + 4;
-
-    const addTextLine = (text) => {
-        page.drawText(text, {
-            x: 50,
-            y: yPosition,
-            size: fontSize,
-            font: timesRomanFont,
-            color: rgb(0,0,0),
+    return new Promise((resolve, reject) => {
+        pdf.create(html).toBuffer((err, buffer) => {
+            if (err) return reject(err);
+            resolve(buffer);
         });
-        yPosition -= lineHeight;
-    };
-
-    addTextLine(`Vehicle Number: ${vehicleDetails.reg_no}`);
-    addTextLine(`RC Owner: ${vehicleDetails.owner_name}`);
-    addTextLine(`RC Father Name: ${vehicleDetails.owner_father_name}`);
-    addTextLine(`Present Address: ${vehicleDetails.current_address_line1}, ${vehicleDetails.current_address_line2}, ${vehicleDetails.current_address_line3}`);
-    addTextLine(`Permanent Address: ${vehicleDetails.permanent_address_line1}, ${vehicleDetails.permanent_address_line2}, ${vehicleDetails.permanent_address_line3}`);
-    addTextLine(`Mobile Number: ${vehicleDetails.mobile_no}`);
-    addTextLine(`Maker Model: ${vehicleDetails.vehicle_manufacturer_name} ${vehicleDetails.model}`);
-    addTextLine(`Vehicle Chassis: ${vehicleDetails.chassis_no}`);
-    addTextLine(`Engine Number: ${vehicleDetails.engine_no}`);
-    addTextLine(`Seat Capacity: ${vehicleDetails.vehicle_seat_capacity}`);
-    addTextLine(`Vehicle Type: ${vehicleDetails.vehicle_type}`);
-    addTextLine(`Vehicle Category: ${vehicleDetails.vehicle_catg}`);
-    addTextLine(`No Cylinders: ${vehicleDetails.cylinders_no}`);
-    addTextLine(`Manufacture Date: ${vehicleDetails.manufacturing_yr}`);
-    addTextLine(`Color: ${vehicleDetails.color}`);
-    addTextLine(`Fuel Type: ${vehicleDetails.fuel_descr}`);
-    addTextLine(`Owner Number: ${vehicleDetails.mobile_no}`);
-    addTextLine(`Registered Date: ${vehicleDetails.reg_date}`);
-    addTextLine(`RC Expire Date: ${vehicleDetails.reg_upto}`);
-    addTextLine(`RC Registration Type: ${vehicleDetails.reg_type_descr}`);
-    addTextLine(`RC Status: ${vehicleDetails.status}`);
-    addTextLine(`RTO: ${vehicleDetails.office_name}, ${vehicleDetails.state}`);
-    addTextLine(`Permit Type: -`);
-    addTextLine(`Insurance Company: ${vehicleDetails.vehicle_insurance_details?.insurance_company_name || 'Not Available'}`);
-    addTextLine(`Insurance Policy No: ${vehicleDetails.vehicle_insurance_details?.policy_no || 'Not Available'}`);
-    addTextLine(`Financer: ${vehicleDetails.financer_details?.financer_name || 'Not Available'}`);
-    addTextLine(`Maker Company: ${vehicleDetails.vehicle_manufacturer_name}`);
-    addTextLine(`Dealer Information`);
-    addTextLine(`Dealer Name: ${vehicleDetails.dealer_name}`);
-    addTextLine(`Address: ${vehicleDetails.dealer_address_line1}, ${vehicleDetails.dealer_address_line2}`);
-    addTextLine(`Financier information`);
-    addTextLine(`Name: ${vehicleDetails.financer_details?.financer_name || 'Not Available'}`);
-    addTextLine(`Address: ${vehicleDetails.financer_details?.financer_address_line1 || 'Not Available'}, ${vehicleDetails.financer_details?.financer_address_line2 || 'Not Available'}`);
-
-    const pdfBytes = await pdfDoc.save();
-    return pdfBytes;
+    });
 };
 
 // Function to upload PDF to Cloudinary
-const uploadPDFToCloudinary = async (pdfBytes, fileName) => {
+const uploadPDFToCloudinary = async (pdfBuffer, fileName) => {
     return new Promise((resolve, reject) => {
         cloudinary.v2.uploader.upload_stream({ resource_type: 'auto', public_id: fileName }, (error, result) => {
             if (error) {
@@ -145,14 +136,12 @@ const uploadPDFToCloudinary = async (pdfBytes, fileName) => {
             } else {
                 resolve(result.secure_url);
             }
-        }).end(pdfBytes);
+        }).end(pdfBuffer);
     });
 };
 
-
 // Function to send WhatsApp message via Interakt API
 const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody) => {
-    // Sanitize message body for Interakt API
     const sanitizedBody = messageBody.replace(/[\n\r\t]/g, ' ');
     const payload = {
         countryCode: '+91',
@@ -187,17 +176,13 @@ const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody) => {
     }
 };
 
-
-// Function to send WhatsApp message via Interakt API
+// Function to send WhatsApp message with a document via Interakt API
 const sendWhatsAppMessageDocument = async (phoneNumber, mediaUrl) => {
     const payload = {
         countryCode: '+91',
         phoneNumber: phoneNumber,
-        type: 'Document',
-        data: {
-            message: 'Here is your vehicle details document.',
-            mediaUrl: mediaUrl,
-        },
+        type: 'MediaDocument',
+        mediaUrl: mediaUrl,
     };
 
     try {
@@ -222,91 +207,45 @@ const sendWhatsAppMessageDocument = async (phoneNumber, mediaUrl) => {
     }
 };
 
-
-
+// Main API route handler
 export default async (req, res) => {
     if (req.method === 'POST') {
-        const { data } = req.body;
+        const { phoneNumber } = req.body;
 
-        // Extract message content
-        const messageContent = data.message.message;
+        try {
+            // Fetch data from the Eyecon API
+            const details = await fetchEyeconDetails(phoneNumber);
 
-        // Respond to test webhook
-        if (!messageContent) {
-            return res.status(200).json({ status: 'success', message: 'Webhook test successful' });
-        }
+            if (details) {
+                // Extract the name from the details
+                const { name } = details;
 
-        // Extract relevant details
-        const phoneNumber = data.customer.phone_number;
-        console.log(phoneNumber, 'phonenumber?')
+                // Fetch vehicle details from the RTO API using the name
+                const vehicleDetails = await fetchVehicleDetails(name);
 
-        let templateName = ''; // Initialize template name
+                // Generate the PDF
+                const pdfBuffer = await generatePDF(vehicleDetails);
 
-        // Check if message starts with 'VD'
-        if (messageContent.startsWith('VD')) {
-            try {
-                // Extract vehicle registration number from message
-                const regNo = messageContent.substring(3).trim(); // Assuming format is 'VD <reg_no>'
+                // Upload the PDF to Cloudinary
+                const fileName = `vehicle_details_${Date.now()}.pdf`;
+                const pdfUrl = await uploadPDFToCloudinary(pdfBuffer, fileName);
 
-                // Fetch vehicle details
-                const vehicleDetails = await fetchVehicleDetails(regNo);
-                console.log(vehicleDetails, 'vehicle details')
-                // Generate PDF
-                const pdfBytes = await generatePDF(vehicleDetails);
+                // Send the WhatsApp message with the PDF URL
+                await sendWhatsAppMessage(phoneNumber, 'vehicle_details_template', `Please find the vehicle details at the following link: ${pdfUrl}`);
 
-                // Upload PDF to Cloudinary
-                const cloudinaryUrl = await uploadPDFToCloudinary(pdfBytes, `${regNo}_vehicle_details.pdf`);
+                // Send the WhatsApp message with the document
+                await sendWhatsAppMessageDocument(phoneNumber, pdfUrl);
 
-                // Send WhatsApp message with the Cloudinary URL
-                await sendWhatsAppMessageDocument(phoneNumber, cloudinaryUrl);
-
-                return res.status(200).json({ status: 'success' });
-            } catch (error) {
-                console.error('Error fetching or sending vehicle details:', error);
-                return res.status(500).json({ status: 'error', message: 'Failed to fetch or send vehicle details' });
+                res.status(200).json({ message: 'Vehicle details sent successfully' });
+            } else {
+                res.status(404).json({ message: 'Details not found' });
             }
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({ message: 'Internal server error' });
         }
-
-
-
-        // Check if message starts with 'name'
-        if (messageContent.startsWith('name')) {
-            try {
-                // Extract phone number from message
-                const phoneNumber = messageContent.substring(5).trim(); // Assuming format is 'name <number>'
-                // Extract relevant details
-                const userNumber = data.customer.phone_number;
-
-                // const phoneNumber = data.customer.phone_number;
-                console.log(phoneNumber, 'phonenumber?')
-                // Fetch details from Eyecon API
-                const eyeconDetails = await fetchEyeconDetails(phoneNumber);
-
-                // Prepare formatted response
-                let formattedResponse = 'Names:\n';
-                formattedResponse += eyeconDetails.fullName + '\n'; // Add main full name
-
-                // Add other names to the list
-                eyeconDetails.otherNames.forEach((item, index) => {
-                    formattedResponse += `${index + 1}. ${item.name}\n`;
-                });
-
-                // Set template name for the WhatsApp message
-                const templateName = 'names';
-
-                // Send WhatsApp message with formatted response
-                await sendWhatsAppMessage(userNumber, templateName, formattedResponse);
-
-                return res.status(200).json({ status: 'success' });
-            } catch (error) {
-                console.error('Error fetching or sending details:', error);
-                return res.status(500).json({ status: 'error', message: 'Failed to fetch or send details' });
-            }
-        }
-
-        // For non 'VD' messages, do not send any template
-        return res.status(200).json({ status: 'success', message: 'No template sent' });
+    } else {
+        res.setHeader('Allow', ['POST']);
+        res.status(405).end(`Method ${req.method} Not Allowed`);
     }
-
-    return res.status(405).json({ status: 'error', message: 'Method not allowed' });
 };
