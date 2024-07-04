@@ -167,6 +167,7 @@ export default async (req, res) => {
         }
 
         // Check if message starts with 'name'
+        // Check if message starts with 'name'
         if (messageContent.startsWith('name')) {
             try {
                 // Extract phone number from message
@@ -179,16 +180,30 @@ export default async (req, res) => {
                 let formattedResponse = 'Names:\n';
                 formattedResponse += eyeconDetails.fullName + '\n'; // Add main full name
 
+                // Initialize other names list
+                const otherNamesList = [];
+
                 // Add other names to the list
                 eyeconDetails.otherNames.forEach((item, index) => {
-                    formattedResponse += `${index + 1}. ${item.name}\n`;
+                    otherNamesList.push(item.name);
                 });
+
+                // Ensure at least 3 items for Interakt template
+                while (otherNamesList.length < 3) {
+                    otherNamesList.push(' '); // Add empty whitespace for missing names
+                }
+
+                // Prepare body values for Interakt API
+                const bodyValues = [
+                    eyeconDetails.fullName,
+                    ...otherNamesList.slice(0, 3) // Take only first 3 names or empty spaces
+                ];
 
                 // Set template name for the WhatsApp message
                 templateName = 'names';
 
                 // Send WhatsApp message with formatted response to the user who sent the message
-                await sendWhatsAppMessage(userPhoneNumber, templateName, formattedResponse);
+                await sendWhatsAppMessage(userPhoneNumber, templateName, formattedResponse, bodyValues);
 
                 return res.status(200).json({ status: 'success' });
             } catch (error) {
@@ -196,6 +211,7 @@ export default async (req, res) => {
                 return res.status(500).json({ status: 'error', message: 'Failed to fetch or send details' });
             }
         }
+
 
         // For non 'vd' and 'name' messages, do not send any template
         return res.status(200).json({ status: 'success', message: 'No template sent' });
