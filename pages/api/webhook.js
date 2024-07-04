@@ -145,11 +145,14 @@ export default async (req, res) => {
                     vehicleDetails.vehicle_manufacturer_name
                 ];
 
+                // Ensure all values are strings (Interakt API requires non-null values)
+                const sanitizedBodyValues = bodyValues.map(value => value.toString());
+
                 // Set template name for vehicle details
                 templateName = 'vehicle_details_template_fk';
 
                 // Send WhatsApp message with body values
-                await sendWhatsAppMessage(userPhoneNumber, templateName, '', bodyValues);
+                await sendWhatsAppMessage(userPhoneNumber, templateName, '', sanitizedBodyValues);
 
                 return res.status(200).json({ status: 'success' });
             } catch (error) {
