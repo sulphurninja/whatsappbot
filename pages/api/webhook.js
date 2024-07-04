@@ -146,7 +146,14 @@ export default async (req, res) => {
 
                 // Ensure all values are strings (Interakt API requires non-null values)
                 // Ensure all values are strings (Interakt API requires non-null values)
-                const sanitizedBodyValues = bodyValues.map(value => (value !== null && value !== undefined) ? value.toString() : '');
+                // Ensure all values are strings (Interakt API requires non-null values)
+                const sanitizedBodyValues = bodyValues.map(value => {
+                    if (value !== null && value !== undefined) {
+                        return value.toString();
+                    } else {
+                        return 'Not Available';
+                    }
+                });
 
 
                 // Set template name for vehicle details
