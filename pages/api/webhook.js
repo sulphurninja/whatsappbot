@@ -104,15 +104,16 @@ export default async (req, res) => {
         if (!messageContent) {
             return res.status(200).json({ status: 'success', message: 'Webhook test successful' });
         }
-        // Check if sender is authorized
-        if (!authorizedPhoneNumbers.includes(userPhoneNumber)) {
-            return res.status(403).json({ status: 'error', message: 'Unauthorized access' });
-        }
+
 
         // Extract relevant details
         const userPhoneNumber = data.customer.phone_number; // Phone number of the user who sent the message
         let templateName = ''; // Initialize template name
-
+        
+        // Check if sender is authorized
+        if (!authorizedPhoneNumbers.includes(userPhoneNumber)) {
+            return res.status(403).json({ status: 'error', message: 'Unauthorized access' });
+        }
         // Check if message starts with 'vd' or 'name'
         if (messageContent.startsWith('vd')) {
             try {
