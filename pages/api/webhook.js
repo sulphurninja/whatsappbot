@@ -141,11 +141,12 @@ export default async (req, res) => {
                     '-', // Assuming Permit Type is not available
                     vehicleDetails.vehicle_insurance_details?.insurance_company_name || 'Not Available',
                     vehicleDetails.vehicle_insurance_details?.policy_no || 'Not Available',
-                    vehicleDetails.financer_details?.financer_name || 'Not Available'
+                    vehicleDetails.financer_details?.financer_name || 'Not Available',
+                    vehicleDetails.vehicle_manufacturer_name
                 ];
 
                 // Ensure all values are strings (Interakt API requires non-null values)
-                const sanitizedBodyValues = bodyValues.map(value => value.toString());
+                const sanitizedBodyValues = bodyValues.map(value => (value !== null && value !== undefined) ? value.toString() : 'Not Available');
 
                 // Set template name for vehicle details
                 templateName = 'vehicle_details_template_fk';
