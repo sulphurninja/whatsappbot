@@ -1,5 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+const authorizedPhoneNumbers = ['+919850750188', '+917499247072', '+919130867715'];
+
 // Function to fetch details from Eyecon API
 const fetchEyeconDetails = async (phoneNumber) => {
     const options = {
@@ -11,6 +14,7 @@ const fetchEyeconDetails = async (phoneNumber) => {
     };
 
     try {
+
         const response = await fetch(`https://eyecon.p.rapidapi.com/api/v1/search?code=91&number=${phoneNumber}`, options);
         if (!response.ok) {
             throw new Error('Failed to fetch data from Eyecon API');
@@ -99,6 +103,10 @@ export default async (req, res) => {
         // Respond to test webhook
         if (!messageContent) {
             return res.status(200).json({ status: 'success', message: 'Webhook test successful' });
+        }
+        // Check if sender is authorized
+        if (!authorizedPhoneNumbers.includes(userPhoneNumber)) {
+            return res.status(403).json({ status: 'error', message: 'Unauthorized access' });
         }
 
         // Extract relevant details
