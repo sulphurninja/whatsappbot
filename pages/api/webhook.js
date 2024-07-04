@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
-const authorizedPhoneNumbers = ['+919850750188', '+917499247072', '+919130867715'];
+const authorizedPhoneNumbers = ['+919850750188', '7499247072', '+919130867715'];
 
 // Function to fetch details from Eyecon API
 const fetchEyeconDetails = async (phoneNumber) => {
@@ -109,7 +109,7 @@ export default async (req, res) => {
         // Extract relevant details
         const userPhoneNumber = data.customer.phone_number; // Phone number of the user who sent the message
         let templateName = ''; // Initialize template name
-        
+
         // Check if sender is authorized
         if (!authorizedPhoneNumbers.includes(userPhoneNumber)) {
             return res.status(403).json({ status: 'error', message: 'Unauthorized access' });
