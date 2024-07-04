@@ -174,6 +174,22 @@ export default async (req, res) => {
             }
         }
 
+        if (['HELP', 'help', 'Help'].includes(messageContent)) {
+            try {
+                // Set template name for the help message
+                templateName = 'help';
+
+                // Send WhatsApp message with help template to the user who sent the message
+                await sendWhatsAppMessage(userPhoneNumber, templateName, '');
+
+                return res.status(200).json({ status: 'success' });
+            } catch (error) {
+                console.error('Error sending help message:', error);
+                return res.status(500).json({ status: 'error', message: 'Failed to send help message' });
+            }
+        }
+
+
         // Check if message starts with 'name'
         // Check if message starts with 'name'
         if (messageContent.startsWith('name')) {
