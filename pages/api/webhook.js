@@ -5,7 +5,7 @@ const fetchEyeconDetails = async (phoneNumber) => {
     const options = {
         method: 'GET',
         headers: {
-            'x-rapidapi-key': '94a8f4bf31mshecce5b4466541b7p1a1c60jsncf852dadff8f',
+            'x-rapidapi-key': '2a5693d34cmsh4d9d8123750aa5fp1c224fjsnc509101cb29e',
             'x-rapidapi-host': 'eyecon.p.rapidapi.com'
         }
     };
@@ -93,8 +93,8 @@ export default async (req, res) => {
     if (req.method === 'POST') {
         const { data } = req.body;
 
-        // Extract message content
-        const messageContent = data.message.message;
+        // Extract message content and normalize to lowercase
+        const messageContent = data.message.message.toLowerCase();
 
         // Respond to test webhook
         if (!messageContent) {
@@ -105,11 +105,11 @@ export default async (req, res) => {
         const userPhoneNumber = data.customer.phone_number; // Phone number of the user who sent the message
         let templateName = ''; // Initialize template name
 
-        // Check if message starts with 'VD'
-        if (messageContent.startsWith('VD')) {
+        // Check if message starts with 'vd' or 'name'
+        if (messageContent.startsWith('vd')) {
             try {
                 // Extract vehicle registration number from message
-                const regNo = messageContent.substring(3).trim(); // Assuming format is 'VD <reg_no>'
+                const regNo = messageContent.substring(2).trim(); // Assuming format is 'vd <reg_no>'
 
                 // Fetch vehicle details
                 const vehicleDetails = await fetchVehicleDetails(regNo);
@@ -145,8 +145,6 @@ export default async (req, res) => {
                 ];
 
                 // Ensure all values are strings (Interakt API requires non-null values)
-                // Ensure all values are strings (Interakt API requires non-null values)
-                // Ensure all values are strings (Interakt API requires non-null values)
                 const sanitizedBodyValues = bodyValues.map(value => {
                     if (value !== null && value !== undefined) {
                         return value.toString();
@@ -154,7 +152,6 @@ export default async (req, res) => {
                         return 'Not Available';
                     }
                 });
-
 
                 // Set template name for vehicle details
                 templateName = 'vehicle_details_template_fk';
@@ -173,7 +170,7 @@ export default async (req, res) => {
         if (messageContent.startsWith('name')) {
             try {
                 // Extract phone number from message
-                const enteredPhoneNumber = messageContent.substring(5).trim(); // Assuming format is 'name <number>'
+                const enteredPhoneNumber = messageContent.substring(4).trim(); // Assuming format is 'name <number>'
 
                 // Fetch details from Eyecon API
                 const eyeconDetails = await fetchEyeconDetails(enteredPhoneNumber);
@@ -188,7 +185,7 @@ export default async (req, res) => {
                 });
 
                 // Set template name for the WhatsApp message
-                const templateName = 'names';
+                templateName = 'names';
 
                 // Send WhatsApp message with formatted response to the user who sent the message
                 await sendWhatsAppMessage(userPhoneNumber, templateName, formattedResponse);
@@ -200,7 +197,7 @@ export default async (req, res) => {
             }
         }
 
-        // For non 'VD' and 'name' messages, do not send any template
+        // For non 'vd' and 'name' messages, do not send any template
         return res.status(200).json({ status: 'success', message: 'No template sent' });
     }
 
