@@ -1,14 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import fs from 'fs';
-import path from 'path';
-import cloudinary from 'cloudinary';
 
-cloudinary.config({
-    cloud_name: 'dxcer6hbg',
-    api_key: '646238564143665',
-    api_secret: 'S2YsiH6t8LBA0qpneCq69JjQJxo'
-});
 // Function to fetch details from Eyecon API
 const fetchEyeconDetails = async (phoneNumber) => {
     const options = {
@@ -32,13 +23,12 @@ const fetchEyeconDetails = async (phoneNumber) => {
     }
 };
 
-
 // Function to fetch vehicle details from RTO API
 const fetchVehicleDetails = async (regNo) => {
     const options = {
         method: 'POST',
         headers: {
-            'x-rapidapi-key': '8ae3a5a678msheaa1dc19606c737p1d7676jsn8ca04b721932',
+            'x-rapidapi-key': '2a5693d34cmsh4d9d8123750aa5fp1c224fjsnc509101cb29e',
             'x-rapidapi-host': 'rto-vehicle-information-verification-india.p.rapidapi.com',
             'Content-Type': 'application/json'
         },
@@ -62,89 +52,8 @@ const fetchVehicleDetails = async (regNo) => {
     }
 };
 
-
-// Function to generate PDF
-const generatePDF = async (vehicleDetails) => {
-    const pdfDoc = await PDFDocument.create();
-    const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-    const logoImageBytes = fs.readFileSync(path.join(process.cwd(), 'public', 'logo.png'));
-    const logoImage = await pdfDoc.embedPng(logoImageBytes);
-    const logoDims = logoImage.scale(0.5);
-
-    const page = pdfDoc.addPage();
-    const { width, height } = page.getSize();
-    const fontSize = 12;
-
-    // // Add the logo image at the top
-    // page.drawImage(logoImage, {
-    //     x: width / 2 - logoDims.width / 2,
-    //     y: height - logoDims.height - 10,
-    //     width: logoDims.width,
-    //     height: logoDims.height,
-    // });
-
-    // Add vehicle details below the logo
-    let yPosition = height - logoDims.height - 30;
-    const lineHeight = fontSize + 4;
-
-    const addTextLine = (text) => {
-        page.drawText(text, {
-            x: 50,
-            y: yPosition,
-            size: fontSize,
-            font: timesRomanFont,
-            color: rgb(0, 0, 0),
-        });
-        yPosition -= lineHeight;
-    };
-
-    addTextLine(`Vehicle Number: ${vehicleDetails.reg_no}`);
-    addTextLine(`RC Owner: ${vehicleDetails.owner_name}`);
-    addTextLine(`RC Father Name: ${vehicleDetails.owner_father_name}`);
-    addTextLine(`Present Address: ${vehicleDetails.current_address_line1}, ${vehicleDetails.current_address_line2}, ${vehicleDetails.current_address_line3}`);
-    addTextLine(`Permanent Address: ${vehicleDetails.permanent_address_line1}, ${vehicleDetails.permanent_address_line2}, ${vehicleDetails.permanent_address_line3}`);
-    addTextLine(`Mobile Number: ${vehicleDetails.mobile_no}`);
-    addTextLine(`Maker Model: ${vehicleDetails.vehicle_manufacturer_name} ${vehicleDetails.model}`);
-    addTextLine(`Vehicle Chassis: ${vehicleDetails.chassis_no}`);
-    addTextLine(`Engine Number: ${vehicleDetails.engine_no}`);
-    addTextLine(`Seat Capacity: ${vehicleDetails.vehicle_seat_capacity}`);
-    addTextLine(`Vehicle Type: ${vehicleDetails.vehicle_type}`);
-    addTextLine(`Vehicle Category: ${vehicleDetails.vehicle_catg}`);
-    addTextLine(`No Cylinders: ${vehicleDetails.cylinders_no}`);
-    addTextLine(`Manufacture Date: ${vehicleDetails.manufacturing_yr}`);
-    addTextLine(`Color: ${vehicleDetails.color}`);
-    addTextLine(`Fuel Type: ${vehicleDetails.fuel_descr}`);
-    addTextLine(`Owner Number: ${vehicleDetails.mobile_no}`);
-    addTextLine(`Registered Date: ${vehicleDetails.reg_date}`);
-    addTextLine(`RC Expire Date: ${vehicleDetails.reg_upto}`);
-    addTextLine(`RC Registration Type: ${vehicleDetails.reg_type_descr}`);
-    addTextLine(`RC Status: ${vehicleDetails.status}`);
-    addTextLine(`RTO: ${vehicleDetails.office_name}, ${vehicleDetails.state}`);
-    addTextLine(`Permit Type: -`);
-    addTextLine(`Insurance Company: ${vehicleDetails.vehicle_insurance_details?.insurance_company_name || 'Not Available'}`);
-    addTextLine(`Insurance Policy No: ${vehicleDetails.vehicle_insurance_details?.policy_no || 'Not Available'}`);
-    addTextLine(`Financer: ${vehicleDetails.financer_details?.financer_name || 'Not Available'}`);
-    addTextLine(`Maker Company: ${vehicleDetails.vehicle_manufacturer_name}`);
-    addTextLine(`Dealer Information`);
-    addTextLine(`Dealer Name: ${vehicleDetails.dealer_name}`);
-    addTextLine(`Address: ${vehicleDetails.dealer_address_line1}, ${vehicleDetails.dealer_address_line2}`);
-    addTextLine(`Financier information`);
-    addTextLine(`Name: ${vehicleDetails.financer_details?.financer_name || 'Not Available'}`);
-    addTextLine(`Address: ${vehicleDetails.financer_details?.financer_address_line1 || 'Not Available'}, ${vehicleDetails.financer_details?.financer_address_line2 || 'Not Available'}`);
-
-    // Save the PDF locally in the public folder
-    const pdfPath = path.join(process.cwd(), 'public', `${regNo}_vehicle_details.pdf`);
-    fs.writeFileSync(pdfPath, await pdfDoc.save());
-
-    // Return the URL to access the PDF
-    const pdfUrl = `/${regNo}_vehicle_details.pdf`; // Adjust the path as per your deployment setup
-    return pdfUrl;
-
-};
-
-
 // Function to send WhatsApp message via Interakt API
-const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody) => {
+const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody, bodyValues = []) => {
     // Sanitize message body for Interakt API
     const sanitizedBody = messageBody.replace(/[\n\r\t]/g, ' ');
     const payload = {
@@ -154,7 +63,7 @@ const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody) => {
         template: {
             name: templateName,
             languageCode: 'en',
-            bodyValues: [sanitizedBody],
+            bodyValues: bodyValues.length ? bodyValues : [sanitizedBody],
         },
     };
 
@@ -179,43 +88,6 @@ const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody) => {
         throw new Error('Failed to send WhatsApp message');
     }
 };
-
-
-// Function to send WhatsApp message via Interakt API
-const sendWhatsAppMessageDocument = async (phoneNumber, mediaUrl) => {
-    const payload = {
-        countryCode: '+91',
-        phoneNumber: phoneNumber,
-        type: 'Document',
-        data: {
-            message: 'Here is your vehicle details document.',
-            mediaUrl: mediaUrl,
-        },
-    };
-
-    try {
-        const response = await fetch('https://api.interakt.ai/v1/public/message/', {
-            method: 'POST',
-            headers: {
-                Authorization: `Basic ${process.env.INTERAKT_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-            const responseData = await response.json();
-            throw new Error(`Interakt API error: ${responseData.message}`);
-        }
-
-        console.log('WhatsApp message sent successfully:', payload);
-    } catch (error) {
-        console.error('Error sending WhatsApp message:', error);
-        throw new Error('Failed to send WhatsApp message');
-    }
-};
-
-
 
 export default async (req, res) => {
     if (req.method === 'POST') {
@@ -230,9 +102,7 @@ export default async (req, res) => {
         }
 
         // Extract relevant details
-        const phoneNumber = data.customer.phone_number;
-        console.log(phoneNumber, 'phonenumber?')
-
+        const userPhoneNumber = data.customer.phone_number; // Phone number of the user who sent the message
         let templateName = ''; // Initialize template name
 
         // Check if message starts with 'VD'
@@ -243,15 +113,43 @@ export default async (req, res) => {
 
                 // Fetch vehicle details
                 const vehicleDetails = await fetchVehicleDetails(regNo);
-                console.log(vehicleDetails, 'vehicle details')
-                // Generate PDF
-                const pdfBytes = await generatePDF(vehicleDetails);
 
-                // Upload PDF to Cloudinary
-                const cloudinaryUrl = await uploadPDFToCloudinary(pdfBytes, `${regNo}_vehicle_details.pdf`);
+                // Prepare body values array for template
+                const bodyValues = [
+                    vehicleDetails.reg_no,
+                    vehicleDetails.owner_name,
+                    vehicleDetails.owner_father_name,
+                    `${vehicleDetails.current_address_line1}, ${vehicleDetails.current_address_line2}, ${vehicleDetails.current_address_line3}`,
+                    `${vehicleDetails.permanent_address_line1}, ${vehicleDetails.permanent_address_line2}, ${vehicleDetails.permanent_address_line3}`,
+                    vehicleDetails.mobile_no,
+                    `${vehicleDetails.vehicle_manufacturer_name} ${vehicleDetails.model}`,
+                    vehicleDetails.chassis_no,
+                    vehicleDetails.engine_no,
+                    vehicleDetails.vehicle_seat_capacity,
+                    vehicleDetails.vehicle_type,
+                    vehicleDetails.vehicle_catg,
+                    vehicleDetails.cylinders_no,
+                    vehicleDetails.manufacturing_yr,
+                    vehicleDetails.color,
+                    vehicleDetails.fuel_descr,
+                    vehicleDetails.mobile_no,
+                    vehicleDetails.reg_date,
+                    vehicleDetails.reg_upto,
+                    vehicleDetails.reg_type_descr,
+                    vehicleDetails.status,
+                    `${vehicleDetails.office_name}, ${vehicleDetails.state}`,
+                    '-', // Assuming Permit Type is not available
+                    vehicleDetails.vehicle_insurance_details?.insurance_company_name || 'Not Available',
+                    vehicleDetails.vehicle_insurance_details?.policy_no || 'Not Available',
+                    vehicleDetails.financer_details?.financer_name || 'Not Available',
+                    vehicleDetails.vehicle_manufacturer_name
+                ];
 
-                // Send WhatsApp message with the Cloudinary URL
-                await sendWhatsAppMessageDocument(phoneNumber, cloudinaryUrl);
+                // Set template name for vehicle details
+                templateName = 'vehicle_details_template_fk';
+
+                // Send WhatsApp message with body values
+                await sendWhatsAppMessage(userPhoneNumber, templateName, '', bodyValues);
 
                 return res.status(200).json({ status: 'success' });
             } catch (error) {
@@ -260,20 +158,14 @@ export default async (req, res) => {
             }
         }
 
-
-
         // Check if message starts with 'name'
         if (messageContent.startsWith('name')) {
             try {
                 // Extract phone number from message
-                const phoneNumber = messageContent.substring(5).trim(); // Assuming format is 'name <number>'
-                // Extract relevant details
-                const userNumber = data.customer.phone_number;
+                const enteredPhoneNumber = messageContent.substring(5).trim(); // Assuming format is 'name <number>'
 
-                // const phoneNumber = data.customer.phone_number;
-                console.log(phoneNumber, 'phonenumber?')
                 // Fetch details from Eyecon API
-                const eyeconDetails = await fetchEyeconDetails(phoneNumber);
+                const eyeconDetails = await fetchEyeconDetails(enteredPhoneNumber);
 
                 // Prepare formatted response
                 let formattedResponse = 'Names:\n';
@@ -287,8 +179,8 @@ export default async (req, res) => {
                 // Set template name for the WhatsApp message
                 const templateName = 'names';
 
-                // Send WhatsApp message with formatted response
-                await sendWhatsAppMessage(userNumber, templateName, formattedResponse);
+                // Send WhatsApp message with formatted response to the user who sent the message
+                await sendWhatsAppMessage(userPhoneNumber, templateName, formattedResponse);
 
                 return res.status(200).json({ status: 'success' });
             } catch (error) {
@@ -297,7 +189,7 @@ export default async (req, res) => {
             }
         }
 
-        // For non 'VD' messages, do not send any template
+        // For non 'VD' and 'name' messages, do not send any template
         return res.status(200).json({ status: 'success', message: 'No template sent' });
     }
 
