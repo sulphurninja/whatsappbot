@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
-const authorizedPhoneNumbers = ['+919850750188', '7499247072', '+919130867715'];
+const authorizedPhoneNumbers = ['9850750188', '7499247072', '9130867715'];
 
 // Function to fetch details from Eyecon API
 const fetchEyeconDetails = async (phoneNumber) => {
