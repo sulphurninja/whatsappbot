@@ -179,7 +179,7 @@ export default async (req, res) => {
                 let formattedResponse = 'Names:\n';
                 formattedResponse += eyeconDetails.fullName + '\n'; // Add main full name
 
-                // Add other names to the list with line breaks
+                // Add other names to the list
                 eyeconDetails.otherNames.forEach((item, index) => {
                     formattedResponse += `${index + 1}. ${item.name}\n`;
                 });
@@ -188,8 +188,7 @@ export default async (req, res) => {
                 templateName = 'names';
 
                 // Send WhatsApp message with formatted response to the user who sent the message
-                // Ensure sanitizedBodyValues does not affect formattedResponse's line breaks
-                await sendWhatsAppMessage(userPhoneNumber, templateName, '', [formattedResponse]);
+                await sendWhatsAppMessage(userPhoneNumber, templateName, formattedResponse);
 
                 return res.status(200).json({ status: 'success' });
             } catch (error) {
