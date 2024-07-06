@@ -4,14 +4,20 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { handleVehicleDetails } from '../../handlers/vehicleDetailsHandler';
 import { handleName } from '../../handlers/nameHandler';
 import { handleHelp } from '../../handlers/helpHandler';
+import connectDB from '@/lib/db';
+import AuthorizedNumber from '@/models/AuthorizedNumber';
 
-const authorizedPhoneNumbers = ['9850750188', '7499247072', '9130867715'];
+connectDB();
+
+// const authorizedPhoneNumbers = ['9850750188', '7499247072', '9130867715'];
 
 export default async (req, res) => {
     if (req.method === 'POST') {
         const { data } = req.body;
         const messageContent = data.message.message.toLowerCase();
         const userPhoneNumber = data.customer.phone_number;
+        const authorizedNumbers = await AuthorizedNumber.find().exec();
+        const authorizedPhoneNumbers = authorizedNumbers.map(num => num.phoneNumber);
 
         if (!authorizedPhoneNumbers.includes(userPhoneNumber)) {
             return res.status(403).json({ status: 'error', message: 'Unauthorized access' });
