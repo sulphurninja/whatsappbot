@@ -16,7 +16,7 @@ export default async (req, res) => {
         const userPhoneNumber = data.customer.phone_number;
 
         try {
-            await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+            await mongoose.connect(uri, { });
             const authorizedNumbers = await AuthorizedNumber.find().exec();
             const authorizedPhoneNumbers = authorizedNumbers.map(num => num.phoneNumber);
 
