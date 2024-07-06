@@ -1,97 +1,10 @@
+// pages/api/webhook.js
+
 import { NextApiRequest, NextApiResponse } from 'next';
-
-
-const authorizedPhoneNumbers = ['9850750188', '7499247072', '9130867715'];
-
-// Function to fetch details from Eyecon API
-const fetchEyeconDetails = async (phoneNumber) => {
-    const options = {
-        method: 'GET',
-        headers: {
-            'x-rapidapi-key': '2a5693d34cmsh4d9d8123750aa5fp1c224fjsnc509101cb29e',
-            'x-rapidapi-host': 'eyecon.p.rapidapi.com'
-        }
-    };
-
-    try {
-
-        const response = await fetch(`https://eyecon.p.rapidapi.com/api/v1/search?code=91&number=${phoneNumber}`, options);
-        if (!response.ok) {
-            throw new Error('Failed to fetch data from Eyecon API');
-        }
-        const data = await response.json();
-        return data.data; // Return only the data section of the response
-    } catch (error) {
-        console.error('Error fetching data from Eyecon API:', error);
-        throw new Error('Failed to fetch data from Eyecon API');
-    }
-};
-
-// Function to fetch vehicle details from RTO API
-const fetchVehicleDetails = async (regNo) => {
-    const options = {
-        method: 'POST',
-        headers: {
-            'x-rapidapi-key': '2a5693d34cmsh4d9d8123750aa5fp1c224fjsnc509101cb29e',
-            'x-rapidapi-host': 'rto-vehicle-information-verification-india.p.rapidapi.com',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            reg_no: regNo,
-            consent: 'Y',
-            consent_text: 'I hear by declare my consent agreement for fetching my information via AITAN Labs API'
-        })
-    };
-
-    try {
-        const response = await fetch('https://rto-vehicle-information-verification-india.p.rapidapi.com/api/v1/rc/vehicleinfo', options);
-        if (!response.ok) {
-            throw new Error('Failed to fetch vehicle information');
-        }
-        const data = await response.json();
-        return data.result; // Return only the result section of the response
-    } catch (error) {
-        console.error('Error fetching vehicle info:', error);
-        throw new Error('Failed to fetch vehicle information');
-    }
-};
-
-// Function to send WhatsApp message via Interakt API
-const sendWhatsAppMessage = async (phoneNumber, templateName, messageBody, bodyValues = []) => {
-    // Sanitize message body for Interakt API
-    const sanitizedBody = messageBody.replace(/[\n\r\t]/g, ' ');
-    const payload = {
-        countryCode: '+91',
-        phoneNumber: phoneNumber,
-        type: 'Template',
-        template: {
-            name: templateName,
-            languageCode: 'en',
-            bodyValues: bodyValues.length ? bodyValues : [sanitizedBody],
-        },
-    };
-
-    try {
-        const response = await fetch('https://api.interakt.ai/v1/public/message/', {
-            method: 'POST',
-            headers: {
-                Authorization: `Basic ${process.env.INTERAKT_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-            const responseData = await response.json();
-            throw new Error(`Interakt API error: ${responseData.message}`);
-        }
-
-        console.log('WhatsApp message sent successfully:', payload);
-    } catch (error) {
-        console.error('Error sending WhatsApp message:', error);
-        throw new Error('Failed to send WhatsApp message');
-    }
-};
+import { fetchEyeconDetails } from '../../lib/fetchEyeconDetails';
+import { fetchVehicleDetails } from '../../lib/fetchVehicleDetails';
+import { fetchTruecallerDetails } from '../../lib/fetchTruecallerDetails';
+import { sendWhatsAppMessage } from '../../lib/sendWhatsappMessage';
 
 export default async (req, res) => {
     if (req.method === 'POST') {
@@ -105,15 +18,16 @@ export default async (req, res) => {
             return res.status(200).json({ status: 'success', message: 'Webhook test successful' });
         }
 
-
         // Extract relevant details
         const userPhoneNumber = data.customer.phone_number; // Phone number of the user who sent the message
         let templateName = ''; // Initialize template name
+        const authorizedPhoneNumbers = ['9850750188', '7499247072', '9130867715'];
 
         // Check if sender is authorized
         if (!authorizedPhoneNumbers.includes(userPhoneNumber)) {
             return res.status(403).json({ status: 'error', message: 'Unauthorized access' });
         }
+
         // Check if message starts with 'vd' or 'name'
         if (messageContent.startsWith('vd')) {
             try {
@@ -190,9 +104,6 @@ export default async (req, res) => {
             }
         }
 
-
-        // Check if message starts with 'name'
-        // Check if message starts with 'name'
         if (messageContent.startsWith('name')) {
             try {
                 // Extract phone number from message
@@ -236,7 +147,6 @@ export default async (req, res) => {
                 return res.status(500).json({ status: 'error', message: 'Failed to fetch or send details' });
             }
         }
-
 
         // For non 'vd' and 'name' messages, do not send any template
         return res.status(200).json({ status: 'success', message: 'No template sent' });
