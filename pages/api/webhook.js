@@ -1,13 +1,11 @@
 // pages/api/webhook.js
 
 import { NextApiRequest, NextApiResponse } from 'next';
-import mongoose from 'mongoose';
-import AuthorizedNumber from '../../models/AuthorizedNumber';
 import { handleVehicleDetails } from '../../handlers/vehicleDetailsHandler';
 import { handleName } from '../../handlers/nameHandler';
 import { handleHelp } from '../../handlers/helpHandler';
 
-const uri = process.env.MONGODB_URI; // Add your MongoDB URI in .env.local
+const authorizedPhoneNumbers = ['9850750188', '7499247072', '9130867715'];
 
 export default async (req, res) => {
     if (req.method === 'POST') {
@@ -15,17 +13,13 @@ export default async (req, res) => {
         const messageContent = data.message.message.toLowerCase();
         const userPhoneNumber = data.customer.phone_number;
 
+        if (!authorizedPhoneNumbers.includes(userPhoneNumber)) {
+            return res.status(403).json({ status: 'error', message: 'Unauthorized access' });
+        }
+
+        const command = messageContent.split(' ')[0]; // Extract the command keyword
+
         try {
-            await mongoose.connect(uri, { });
-            const authorizedNumbers = await AuthorizedNumber.find().exec();
-            const authorizedPhoneNumbers = authorizedNumbers.map(num => num.phoneNumber);
-
-            if (!authorizedPhoneNumbers.includes(userPhoneNumber)) {
-                return res.status(403).json({ status: 'error', message: 'Unauthorized access' });
-            }
-
-            const command = messageContent.split(' ')[0]; // Extract the command keyword
-
             switch (command) {
                 case 'vd':
                     await handleVehicleDetails(userPhoneNumber, messageContent);
