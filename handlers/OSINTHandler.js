@@ -7,6 +7,15 @@ import { generateOSINTPDF } from '../lib/generateOSINTPDF';
 import { sendDocumentMessage } from '../lib/sendWhatsappDocumentMessage';
 import fs from 'fs';
 import path from 'path';
+import AWS from 'aws-sdk';
+
+// Initialize AWS SDK
+const s3 = new AWS.S3({
+    accessKeyId: `${process.env.ACCESS_KEY}`,
+    secretAccessKey: `${process.env.SECRET_KEY}`,
+    region: 'ap-south-1'
+});
+
 
 export const handleOSINT = async (userPhoneNumber, mobNo) => {
     try {
@@ -25,21 +34,17 @@ export const handleOSINT = async (userPhoneNumber, mobNo) => {
         // Generate PDF with OSINT data
         const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo);
 
-        // Save the PDF to a public directory
-        // const pdfPath = path.join(process.cwd(), 'public', `${mobNo}_OSINT_Report.pdf`);
-        // fs.writeFileSync(pdfPath, pdfBuffer);
+        // Upload PDF to S3
+        const uploadParams = {
+            Bucket: 'whatsappbotgaruda',
+            Key: `osint-reports/report-${mobNo}.pdf`, // Specify the path and name of the file in S3
+            Body: pdfBuffer,
+            ContentType: 'application/pdf'
+        };
 
-        // Generate the URL for the PDF
-        // const mediaUrl = `https://www.dropbox.com/scl/fi/ceuq6q6rwrh41nszos8jt/osint-report-10.pdf? const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo, upiDetails);
-
-        // Call the API route to upload PDF to Dropbox and get media URL
-        const filename = `${mobNo}_OSINT_Report.pdf`;
-        const response = await axios.post('/api/upload', {
-            pdfBuffer: pdfBuffer.toString('base64'),
-            filename
-        });
-
-        const mediaUrl = response.data.mediaUrl;
+        const uploadResult = await s3.upload(uploadParams).promise();
+        const mediaUrl = uploadResult.Location;
+        console.log('File uploaded to S3:', mediaUrl);
 
         // Send the document message via WhatsApp
         await sendDocumentMessage(userPhoneNumber, 'Here is your OSINT report.', mediaUrl);
