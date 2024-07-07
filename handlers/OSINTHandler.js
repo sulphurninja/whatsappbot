@@ -10,24 +10,24 @@ import path from 'path';
 
 export const handleOSINT = async (userPhoneNumber, mobNo) => {
     try {
-        // Fetch details from Eyecon API
-        const eyeconDetails = await fetchEyeconDetails(mobNo);
-        console.log(eyeconDetails, 'eyecon details');
+        // // Fetch details from Eyecon API
+        // const eyeconDetails = await fetchEyeconDetails(mobNo);
+        // console.log(eyeconDetails, 'eyecon details');
 
-        // Fetch details from Truecaller API
-        const truecallerDetails = await fetchTruecallerDetails(mobNo);
-        console.log(truecallerDetails, 'truecaller');
+        // // Fetch details from Truecaller API
+        // const truecallerDetails = await fetchTruecallerDetails(mobNo);
+        // console.log(truecallerDetails, 'truecaller');
 
-        // Fetch UPI details
-        const upiDetails = await verifyUPI(mobNo);
-        console.log(upiDetails, 'upi details');
+        // // Fetch UPI details
+        // const upiDetails = await verifyUPI(mobNo);
+        // console.log(upiDetails, 'upi details');
 
-        // Generate PDF with OSINT data
-        const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo, upiDetails);
+        // // Generate PDF with OSINT data
+        // const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo, upiDetails);
 
-        // Save the PDF to a public directory
-        const pdfPath = path.join(process.cwd(), 'public', `${mobNo}_OSINT_Report.pdf`);
-        fs.writeFileSync(pdfPath, pdfBuffer);
+        // // Save the PDF to a public directory
+        // const pdfPath = path.join(process.cwd(), 'public', `${mobNo}_OSINT_Report.pdf`);
+        // fs.writeFileSync(pdfPath, pdfBuffer);
 
         // Generate the URL for the PDF
         const mediaUrl = `https://www.orimi.com/pdf-test.pdf`;
