@@ -30,7 +30,7 @@ export const handleOSINT = async (userPhoneNumber, mobNo) => {
         fs.writeFileSync(pdfPath, pdfBuffer);
 
         // Generate the URL for the PDF
-        const mediaUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/public/${mobNo}_OSINT_Report.pdf`;
+        const mediaUrl = `https://www.orimi.com/pdf-test.pdf`;
         console.log(mediaUrl, 'media url');
 
         // Send the document message via WhatsApp
