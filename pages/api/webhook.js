@@ -4,12 +4,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { handleVehicleDetails } from '../../handlers/vehicleDetailsHandler';
 import { handleName } from '../../handlers/nameHandler';
 import { handleHelp } from '../../handlers/helpHandler';
+import { handleOSINT } from '../../handlers/OSINTHandler'; // Import OSINT handler
 import connectDB from '@/lib/db';
 import AuthorizedNumber from '@/models/AuthorizedNumber';
 
 connectDB();
-
-// const authorizedPhoneNumbers = ['9850750188', '7499247072', '9130867715'];
 
 export default async (req, res) => {
     if (req.method === 'POST') {
@@ -37,6 +36,12 @@ export default async (req, res) => {
                 case 'Help':
                 case 'HELP':
                     await handleHelp(userPhoneNumber);
+                    break;
+                case 'osint':
+                case 'OSINT':
+                case 'Osint':
+                    const mobNo = messageContent.substring(6).trim(); // Extract mobile number
+                    await handleOSINT(userPhoneNumber, mobNo); // Call OSINT handler with mobile number
                     break;
                 default:
                     return res.status(200).json({ status: 'success', message: 'No template sent' });

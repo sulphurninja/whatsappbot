@@ -19,7 +19,7 @@ const RemoveNumberForm = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className='flex justify-center mt-4'>
             <input
                 type="text"
                 value={phoneNumber}

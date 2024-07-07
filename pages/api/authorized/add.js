@@ -7,16 +7,16 @@ const uri = process.env.MONGODB_URI; // Add your MongoDB URI in .env.local
 
 const addAuthorizedNumber = async (req, res) => {
     if (req.method === 'POST') {
-        const { phoneNumber } = req.body;
+        const { phoneNumber, Name, Designation, PoliceStation, email, district } = req.body;
 
-        if (!phoneNumber) {
-            return res.status(400).json({ status: 'error', message: 'Phone number is required' });
+        if (!phoneNumber || !Name || !Designation || !PoliceStation) {
+            return res.status(400).json({ status: 'error', message: 'Required fields are missing' });
         }
 
         try {
             await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
-            const newNumber = new AuthorizedNumber({ phoneNumber });
+            const newNumber = new AuthorizedNumber({ phoneNumber, Name, Designation, PoliceStation, email, district });
             await newNumber.save();
 
             return res.status(200).json({ status: 'success', message: 'Phone number added' });
