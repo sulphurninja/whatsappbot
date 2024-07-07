@@ -10,7 +10,7 @@ import path from 'path';
 
 export const handleOSINT = async (userPhoneNumber, mobNo) => {
     try {
-        // Fetch details from Eyecon API
+
         const eyeconDetails = await fetchEyeconDetails(mobNo);
         console.log(eyeconDetails, 'eyecon details');
 
@@ -19,19 +19,27 @@ export const handleOSINT = async (userPhoneNumber, mobNo) => {
         console.log(truecallerDetails, 'truecaller');
 
         // Fetch UPI details
-        const upiDetails = await verifyUPI(mobNo);
-        console.log(upiDetails, 'upi details');
+        // const upiDetails = await verifyUPI(mobNo);
+        // console.log(upiDetails, 'upi details');
 
         // Generate PDF with OSINT data
-        const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo, upiDetails);
+        const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo);
 
         // Save the PDF to a public directory
         // const pdfPath = path.join(process.cwd(), 'public', `${mobNo}_OSINT_Report.pdf`);
         // fs.writeFileSync(pdfPath, pdfBuffer);
 
         // Generate the URL for the PDF
-        const mediaUrl = ``;
-        console.log(mediaUrl, 'media url');
+        // const mediaUrl = `https://www.dropbox.com/scl/fi/ceuq6q6rwrh41nszos8jt/osint-report-10.pdf? const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo, upiDetails);
+
+        // Call the API route to upload PDF to Dropbox and get media URL
+        const filename = `${mobNo}_OSINT_Report.pdf`;
+        const response = await axios.post('/api/upload', {
+            pdfBuffer: pdfBuffer.toString('base64'),
+            filename
+        });
+
+        const mediaUrl = response.data.mediaUrl;
 
         // Send the document message via WhatsApp
         await sendDocumentMessage(userPhoneNumber, 'Here is your OSINT report.', mediaUrl);
