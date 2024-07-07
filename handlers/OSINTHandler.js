@@ -30,7 +30,7 @@ export const handleOSINT = async (userPhoneNumber, mobNo) => {
         // fs.writeFileSync(pdfPath, pdfBuffer);
 
         // Generate the URL for the PDF
-        const mediaUrl = `https://www.dropbox.com/scl/fi/ceuq6q6rwrh41nszos8jt/osint-report-10.pdf?rlkey=yk81ftgs0paphfp3ko1eveulj&st=nm0j1xnd&dl=0`;
+        const mediaUrl = ``;
         console.log(mediaUrl, 'media url');
 
         // Send the document message via WhatsApp
