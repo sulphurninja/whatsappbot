@@ -4,7 +4,7 @@ import { verifyUPI } from '@/lib/verifyUPI';
 import { fetchEyeconDetails } from '../lib/fetchEyeconDetails';
 import { fetchTruecallerDetails } from '../lib/fetchTruecallerDetails';
 import { generateOSINTPDF } from '../lib/generateOSINTPDF';
-import { sendDocumentMessage } from '../lib/sendDocumentMessage';
+import { sendDocumentMessage } from '../lib/sendWhatsappDocumentMessage';
 import fs from 'fs';
 import path from 'path';
 
