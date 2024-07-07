@@ -32,7 +32,7 @@ export const handleOSINT = async (userPhoneNumber, mobNo) => {
         console.log(upiDetails, 'upi details');
 
         // Generate PDF with OSINT data
-        const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo, upiDetails);
+        const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo, upiDetails, userPhoneNumber);
 
         // Upload PDF to S3
         const uploadParams = {
