@@ -27,12 +27,12 @@ export const handleOSINT = async (userPhoneNumber, mobNo) => {
         const truecallerDetails = await fetchTruecallerDetails(mobNo);
         console.log(truecallerDetails, 'truecaller');
 
-        // Fetch UPI details
-        // const upiDetails = await verifyUPI(mobNo);
-        // console.log(upiDetails, 'upi details');
+  
+        const upiDetails = await verifyUPI(mobNo);
+        console.log(upiDetails, 'upi details');
 
         // Generate PDF with OSINT data
-        const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo);
+        const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo, upiDetails);
 
         // Upload PDF to S3
         const uploadParams = {
