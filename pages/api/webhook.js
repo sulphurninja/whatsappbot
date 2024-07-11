@@ -12,6 +12,7 @@ connectDB();
 
 export default async (req, res) => {
     if (req.method === 'POST') {
+        return res.status(200).json({ status: 'success', message: 'Test successful' });
         const { data } = req.body;
         const messageContent = data.message.message.toLowerCase();
         const userPhoneNumber = data.customer.phone_number;
