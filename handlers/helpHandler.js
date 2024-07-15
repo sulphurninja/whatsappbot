@@ -1,6 +1,6 @@
 import { sendWhatsAppMessage } from '../lib/sendMessage';
 
-const longMessage = `🚔Enhance Your Investigative Skills
+const firstChunk = `🚔Enhance Your Investigative Skills
 👇
 🏍🚙 Vehicle & Challan: 
   VD MH14TC4540 - Check vehicle registration details
@@ -23,8 +23,9 @@ const longMessage = `🚔Enhance Your Investigative Skills
   IPL https ://google.com -  Track IP/GPS (copy & share the generated link)
   IPSTOP #XDTRFGTZ - Delete an IP Log link
   IP 192.168.0.01 - Lookup IP address details
-  PIN 411044 - Get Pin Code information
-👇
+  PIN 411044 - Get Pin Code information`;
+
+const secondChunk = `👇
 📌Device & Travel:
   IMEI 35920003041526 - Find device model details
   FULL IMEI 35920003041526 -  Find the last digit of an IMEI
@@ -46,8 +47,11 @@ Account & Support:
 
 export const handleHelp = async (userPhoneNumber) => {
     try {
-        // Send the entire long message
-        await sendWhatsAppMessage(userPhoneNumber, longMessage);
+        // Send the first chunk
+        await sendWhatsAppMessage(userPhoneNumber, firstChunk);
+        
+        // Send the second chunk
+        await sendWhatsAppMessage(userPhoneNumber, secondChunk);
     } catch (error) {
         console.error('Error sending help message:', error);
         throw new Error('Failed to send help message');
