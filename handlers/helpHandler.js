@@ -44,36 +44,10 @@ Account & Support:
   * Validity - Check your subscription status
   * Support - Get assistance`;
 
-const splitMessage = (message, maxLength) => {
-    const words = message.split(' ');
-    const chunks = [];
-    let currentChunk = '';
-
-    words.forEach(word => {
-        if ((currentChunk + word).length <= maxLength) {
-            currentChunk += `${word} `;
-        } else {
-            chunks.push(currentChunk.trim());
-            currentChunk = `${word} `;
-        }
-    });
-
-    if (currentChunk) {
-        chunks.push(currentChunk.trim());
-    }
-
-    return chunks;
-};
-
 export const handleHelp = async (userPhoneNumber) => {
     try {
-        // Split the message into chunks of up to 1024 characters
-        const messageChunks = splitMessage(longMessage, 1024);
-
-        // Send each chunk sequentially
-        for (const chunk of messageChunks) {
-            await sendWhatsAppMessage(userPhoneNumber, chunk);
-        }
+        // Send the entire long message
+        await sendWhatsAppMessage(userPhoneNumber, longMessage);
     } catch (error) {
         console.error('Error sending help message:', error);
         throw new Error('Failed to send help message');
