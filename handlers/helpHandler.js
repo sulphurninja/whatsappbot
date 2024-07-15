@@ -1,4 +1,4 @@
-import { sendWhatsAppMessage } from '../lib/sendMessage';
+import { sendWhatsAppMessage } from '../lib/sendWhatsappMessage';
 
 const longMessage = `🚔Enhance Your Investigative Skills
 👇
