@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const pdfBuffer = await handleOSINT(mobNo);
+        const pdfBuffer = await handleOSINT(mobNo, mobNo);
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename=osint_report.pdf');

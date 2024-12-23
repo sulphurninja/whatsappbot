@@ -4,10 +4,8 @@ import { verifyUPI } from '@/lib/verifyUPI';
 import { fetchEyeconDetails } from '../lib/fetchEyeconDetails';
 import { fetchTruecallerDetails } from '../lib/fetchTruecallerDetails';
 import { generateOSINTPDF } from '../lib/generateOSINTPDF';
-import { sendDocumentMessage } from '../lib/sendWhatsappDocumentMessage';
-import fs from 'fs';
-import path from 'path';
 import AWS from 'aws-sdk';
+import { fetchDataBreach } from '@/lib/fetchBreachDetails';
 
 // Initialize AWS SDK
 const s3 = new AWS.S3({
@@ -19,7 +17,6 @@ const s3 = new AWS.S3({
 
 export const handleOSINT = async (userPhoneNumber, mobNo) => {
     try {
-
         const eyeconDetails = await fetchEyeconDetails(mobNo);
         console.log(eyeconDetails, 'eyecon details');
 
@@ -27,12 +24,22 @@ export const handleOSINT = async (userPhoneNumber, mobNo) => {
         const truecallerDetails = await fetchTruecallerDetails(mobNo);
         console.log(truecallerDetails, 'truecaller');
 
-  
+
         const upiDetails = await verifyUPI(mobNo);
         console.log(upiDetails, 'upi details');
 
+        // Check if an email exists in Truecaller details
+        const email = truecallerDetails.data[0]?.internetAddresses?.[0]?.id || null;
+
+        // Fetch breach details if email exists
+        let breachDetails = null;
+        if (email) {
+            breachDetails = await fetchDataBreach(email);
+            console.log(breachDetails, 'breach details');
+        }
+
         // Generate PDF with OSINT data
-        const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo, upiDetails, userPhoneNumber);
+        const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo, upiDetails, userPhoneNumber, breachDetails);
 
         // Upload PDF to S3
         const uploadParams = {
