@@ -24,7 +24,6 @@ export const handleVehicleDetails = async (userPhoneNumber, messageContent) => {
             vehicleDetails.manufacturing_yr,
             vehicleDetails.color,
             vehicleDetails.fuel_descr,
-            vehicleDetails.mobile_no,
             vehicleDetails.reg_date,
             vehicleDetails.reg_upto,
             vehicleDetails.reg_type_descr,
@@ -34,7 +33,7 @@ export const handleVehicleDetails = async (userPhoneNumber, messageContent) => {
             vehicleDetails.vehicle_insurance_details?.insurance_company_name || 'Not Available',
             vehicleDetails.vehicle_insurance_details?.policy_no || 'Not Available',
             vehicleDetails.financer_details?.financer_name || 'Not Available'
-        ]
+        ];
         const sanitizedBodyValues = bodyValues.map(value => value !== null && value !== undefined ? value.toString() : 'Not Available');
         const templateName = 'vehicle_details_template_fk';
 
