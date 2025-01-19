@@ -6,6 +6,7 @@ import { fetchTruecallerDetails } from '../lib/fetchTruecallerDetails';
 import { generateOSINTPDF } from '../lib/generateOSINTPDF';
 import AWS from 'aws-sdk';
 import { fetchDataBreach } from '@/lib/fetchBreachDetails';
+import { sendDocumentMessage } from '@/lib/sendWhatsappDocumentMessage';
 
 // Initialize AWS SDK
 const s3 = new AWS.S3({
@@ -33,10 +34,10 @@ export const handleOSINT = async (userPhoneNumber, mobNo) => {
 
         // Fetch breach details if email exists
         let breachDetails = null;
-        if (email) {
-            breachDetails = await fetchDataBreach(email);
-            console.log(breachDetails, 'breach details');
-        }
+        // if (email) {
+        //     breachDetails = await fetchDataBreach(email);
+        //     console.log(breachDetails, 'breach details');
+        // }
 
         // Generate PDF with OSINT data
         const pdfBuffer = await generateOSINTPDF(eyeconDetails, truecallerDetails, mobNo, upiDetails, userPhoneNumber, breachDetails);

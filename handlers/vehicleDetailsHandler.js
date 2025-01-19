@@ -6,38 +6,35 @@ export const handleVehicleDetails = async (userPhoneNumber, messageContent) => {
     try {
         const regNo = messageContent.substring(2).trim(); // Assuming format is 'vd <reg_no>'
         const vehicleDetails = await fetchVehicleDetails(regNo);
-        // Extract the 'response' object from the fetched data
-        const response = vehicleDetails.response;
 
         const bodyValues = [
-            response.license_plate || 'Not Available', // Registration number
-            response.owner_name || 'Not Available',    // Owner's name
-            response.father_name || 'Not Available',   // Father's name
-            response.present_address || 'Not Available', // Current address
-            response.permanent_address || 'Not Available', // Permanent address
-            '-', // Mobile number (not provided in new API)
-            `${response.brand_name || ''} ${response.brand_model || ''}`.trim() || 'Not Available', // Vehicle manufacturer and model
-            response.chassis_number || 'Not Available', // Chassis number
-            response.engine_number || 'Not Available',  // Engine number
-            response.seating_capacity || 'Not Available', // Seating capacity
-            response.class || 'Not Available',          // Vehicle type
-            response.norms || 'Not Available',          // Vehicle category (Norms)
-            response.cylinders || 'Not Available',      // Number of cylinders
-            response.manufacturing_date_formatted || 'Not Available', // Manufacturing year
-            response.color || 'Not Available',          // Vehicle color
-            response.fuel_type || 'Not Available',      // Fuel type
-            '-', // Mobile number placeholder
-            response.registration_date || 'Not Available', // Registration dat
-            response.fit_up_to || 'Not Available',      // Registration valid 
+            vehicleDetails.reg_no,
+            vehicleDetails.owner_name,
+            vehicleDetails.owner_father_name,
+            `${vehicleDetails.current_address_line1}, ${vehicleDetails.current_address_line2}, ${vehicleDetails.current_address_line3}`,
+            `${vehicleDetails.permanent_address_line1}, ${vehicleDetails.permanent_address_line2}, ${vehicleDetails.permanent_address_line3}`,
+            vehicleDetails.mobile_no,
+            `${vehicleDetails.vehicle_manufacturer_name} ${vehicleDetails.model}`,
+            vehicleDetails.chassis_no,
+            vehicleDetails.engine_no,
+            vehicleDetails.vehicle_seat_capacity,
+            vehicleDetails.vehicle_type,
+            vehicleDetails.vehicle_catg,
+            vehicleDetails.cylinders_no,
+            vehicleDetails.manufacturing_yr,
+            vehicleDetails.color,
+            vehicleDetails.fuel_descr,
+            vehicleDetails.mobile_no,
+            vehicleDetails.reg_date,
+            vehicleDetails.reg_upto,
             vehicleDetails.reg_type_descr,
-            response.rc_status || 'Not Available',      // Registration status
-            response.rto_name || 'Not Available',       // RTO name and state
-            response.permit_type || 'Not Available',    // Permit type
-            response.insurance_company || 'Not Available', // Insurance comp
-            response.insurance_policy || 'Not Available',  // Policy number
-            response.financer || 'Not Available'        // Financer details
-        ];
-
+            vehicleDetails.status,
+            `${vehicleDetails.office_name}, ${vehicleDetails.state}`,
+            '-', // Assuming Permit Type is not available
+            vehicleDetails.vehicle_insurance_details?.insurance_company_name || 'Not Available',
+            vehicleDetails.vehicle_insurance_details?.policy_no || 'Not Available',
+            vehicleDetails.financer_details?.financer_name || 'Not Available'
+        ]
         const sanitizedBodyValues = bodyValues.map(value => value !== null && value !== undefined ? value.toString() : 'Not Available');
         const templateName = 'vehicle_details_template_fk';
 
